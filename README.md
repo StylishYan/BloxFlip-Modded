@@ -28,6 +28,7 @@ In particular, this project should **not** be used as:
 - a commercial BloxFlip replacement.
 
 The local backend was created specifically to make the saved frontend and game interfaces usable for entertainment on a local computer. Its architecture and security model should not be treated as suitable for a publicly accessible service.
+This was made using AI so do not host it publically or do it at your own risk.
 
 ## What is BloxFlip MODDED?
 
