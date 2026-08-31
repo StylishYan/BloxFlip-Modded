@@ -56,7 +56,7 @@ The local build contains recreations of several game interfaces, including:
 - Cups
 - Mines
 - Towers
-- Blackjack
+- Blackjack (in future updates)
 - Dice
 - Plinko
 - Upgrader
