@@ -68,7 +68,7 @@ Some original BloxFlip functionality has intentionally been removed, disabled, h
 Recommended environment:
 
 - Windows 10/11
-- Node.js 18+
+- **Node.js version 18+**
 - Browser
 - Internet access may be required for some optional Roblox profile/avatar lookups
 
@@ -81,7 +81,7 @@ No external database is required for normal local use.
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/BloxFlip-MODDED.git
+git clone https://github.com/StylishYan/BloxFlip-Modded.git
 ```
 
 Then enter the project directory:
