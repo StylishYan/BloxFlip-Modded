@@ -51,17 +51,28 @@ The project is intended to let users explore and play with the interface and gam
 
 The local build contains recreations of several game interfaces, including:
 
-- Crash ![Preview2](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p2.png?raw=true)
-- Slide ![Preview3](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p9.png?raw=true)
-- Cups ![Preview4](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p11.png?raw=true)
-- Mines ![Preview5](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p7.png?raw=true)
-- Towers ![Preview6](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p8.png?raw=true)
-- Blackjack ![Preview7](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p5.png?raw=true)
-- Dice ![Preview8](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p6.png?raw=true)
-- Plinko ![Preview9](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p10.png?raw=true)
-- Upgrader ![Preview10](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p12.png?raw=true)
-- Cases ![Preview11](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p3.png?raw=true)
-- Case Battles ![Preview12](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p4.png?raw=true)
+- # Crash
+  ![Preview2](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p2.png?raw=true)
+- # Slide
+  ![Preview3](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p9.png?raw=true)
+- # Cups
+  ![Preview4](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p11.png?raw=true)
+- # Mines
+  ![Preview5](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p7.png?raw=true)
+- # Towers
+  ![Preview6](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p8.png?raw=true)
+- # Blackjack
+  ![Preview7](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p5.png?raw=true)
+- # Dice
+  ![Preview8](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p6.png?raw=true)
+- # Plinko
+  ![Preview9](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p10.png?raw=true)
+- # Upgrader
+  ![Preview10](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p12.png?raw=true)
+- # Cases
+  ![Preview11](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p3.png?raw=true)
+- # Case Battles
+  ![Preview12](https://github.com/StylishYan/BloxFlip-Modded/blob/main/previews/p4.png?raw=true)
 
 Some original BloxFlip functionality has intentionally been removed, disabled, hidden, or replaced because it does not make sense in a local entertainment build.
 
