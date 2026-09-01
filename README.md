@@ -56,7 +56,7 @@ The local build contains recreations of several game interfaces, including:
 - Cups
 - Mines
 - Towers
-- Blackjack (in future updates)
+- Blackjack
 - Dice
 - Plinko
 - Upgrader
@@ -151,7 +151,9 @@ No Robux purchase, Game Pass purchase, cryptocurrency transfer, card payment, or
 
 Some local social/game functionality may be available through the chat.
 
-For example, virtual FlipCoins can be transferred or distributed using supported local commands.
+For example, virtual FlipCoins can be transferred or distributed using supported local commands:
+- .tip user amount
+- .rain amount
 
 All such transactions only modify the local virtual state and have no real-world value.
 
