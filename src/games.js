@@ -13,7 +13,7 @@ const comb = (n,k) => {
 function validBet(user, value, min=0.1) {
   const bet=round2(value);
   if(!Number.isFinite(bet)||bet<min) throw new Error(`Minimum bet is ${min}`);
-  if(bet>user.balance) throw new Error('Insufficient balance');
+  if(bet>store.spendableBalance(user)) throw new Error('Insufficient balance');
   return bet;
 }
 function shuffledIndices(count, values) {
