@@ -8,7 +8,7 @@ try {
     const target = path.join(avatars, name);
     if (fs.statSync(target).isFile()) fs.unlinkSync(target);
   }
-  console.log('BloxFlip Exact V2.3 state and cached avatars reset. The next launch will create a fresh database.');
+  console.log('BloxFlip MODDED v1.1 state and cached avatars reset. The next launch will create a fresh database.');
 } catch (e) {
   console.error('Could not reset state:', e.message);
   process.exitCode = 1;

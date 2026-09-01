@@ -11,7 +11,7 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo Starting BloxFlip Modded V1.0...
+echo Starting BloxFlip MODDED v1.1...
 echo Open: http://localhost:3000
 echo.
 start "" /b powershell -NoProfile -WindowStyle Hidden -Command "Start-Sleep -Milliseconds 900; Start-Process 'http://localhost:3000'"

@@ -111,14 +111,52 @@ function towersReveal(user,index){const g=store.state.activeTowers[user.id];if(!
 function towersCashout(user,auto=false){const g=store.state.activeTowers[user.id];if(!g)throw new Error('No active Towers game');if(g.level<1)throw new Error('Climb at least one floor first');const mult=towerMultiplier(g.difficulty,g.level),payout=round2(g.bet*mult);delete store.state.activeTowers[user.id];record(user,'towers',g.bet,payout,mult,{rows:g.rows,picks:g.picks,proof:g.proof,auto});store.saveSoon();return {...towersPublic(g,true),finished:true,payout,balance:user.balance};}
 
 const suits=['♠','♥','♦','♣'], ranks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
-function cardValue(hand){let total=0,aces=0;for(const c of hand){if(c.rank==='A'){total+=11;aces++;}else if(['J','Q','K'].includes(c.rank))total+=10;else total+=+c.rank;}while(total>21&&aces){total-=10;aces--;}return total;}
-function isBlackjack(h){return h.length===2&&cardValue(h)===21;}
-function makeShoe(values){const deck=[];for(let d=0;d<6;d++)for(const suit of suits)for(const rank of ranks)deck.push({rank,suit}); const order=shuffledIndices(deck.length,values);return order.map(i=>deck[i]);}
+function cardValue(hand){let total=0,aces=0;for(const c of hand||[]){if(c.rank==='A'){total+=11;aces++;}else if(['J','Q','K'].includes(c.rank))total+=10;else total+=+c.rank;}while(total>21&&aces){total-=10;aces--;}return total;}
+function isBlackjack(h){return Array.isArray(h)&&h.length===2&&cardValue(h)===21;}
+function makeShoe(values){const deck=[];for(let d=0;d<6;d++)for(const suit of suits)for(const rank of ranks)deck.push({rank,suit});const order=shuffledIndices(deck.length,values);return order.map(i=>deck[i]);}
 function dealerPlay(g){while(cardValue(g.dealer)<17)g.dealer.push(g.shoe.shift());}
-function blackjackSettle(user,g){dealerPlay(g);let payout=0;for(const h of g.hands){const pv=cardValue(h.cards),dv=cardValue(g.dealer);let p=0,outcome='lose';if(pv>21){outcome='bust';}else if(isBlackjack(h.cards)&&!isBlackjack(g.dealer)){p=round2(h.bet*2.5);outcome='blackjack';}else if(dv>21||pv>dv){p=round2(h.bet*2);outcome='win';}else if(pv===dv){p=h.bet;outcome='push';}h.outcome=outcome;h.payout=p;payout+=p;} const totalBet=g.hands.reduce((s,h)=>s+h.bet,0);const mult=totalBet?payout/totalBet:0;delete store.state.activeBlackjack[user.id];record(user,'blackjack',totalBet,round2(payout),mult,{dealer:g.dealer,hands:g.hands,proof:g.proof});store.saveSoon();return blackjackPublic(g,true,user);}
-function blackjackPublic(g,done=false,user=null){return {id:g.id,bet:g.originalBet,dealer:done?g.dealer:[g.dealer[0],{hidden:true}],hands:g.hands.map(h=>({...h,value:cardValue(h.cards)})),activeHand:g.activeHand,done,proof:g.proof,balance:user?.balance};}
-function blackjackStart(user,body={}){if(store.state.activeBlackjack[user.id])throw new Error('Finish your current Blackjack hand first');const bet=validBet(user,body.bet);store.adjustBalance(user,-bet,'BLACKJACK_BET');const rnd=fair.beginRound(user,'blackjack',400);store.saveSoon();const shoe=makeShoe(rnd.values);const g={id:store.id('bj'),originalBet:bet,shoe,dealer:[shoe.shift(),shoe.shift()],hands:[{cards:[shoe.shift(),shoe.shift()],bet,stood:false}],activeHand:0,proof:rnd.proof};store.state.activeBlackjack[user.id]=g;store.saveSoon();if(isBlackjack(g.hands[0].cards))return blackjackSettle(user,g);return blackjackPublic(g,false,user);}
-function blackjackAction(user,action){const g=store.state.activeBlackjack[user.id];if(!g)throw new Error('No active Blackjack hand');let h=g.hands[g.activeHand];if(!h) return blackjackSettle(user,g);if(action==='hit'){h.cards.push(g.shoe.shift());if(cardValue(h.cards)>=21){h.stood=true;g.activeHand++;}}else if(action==='stand'){h.stood=true;g.activeHand++;}else if(action==='double'){if(h.cards.length!==2)throw new Error('Double is only available on the first two cards');if(user.balance<h.bet)throw new Error('Insufficient balance');store.adjustBalance(user,-h.bet,'BLACKJACK_DOUBLE');h.bet*=2;h.cards.push(g.shoe.shift());h.stood=true;g.activeHand++;}else if(action==='split'){if(g.hands.length>=4)throw new Error('Maximum split reached');if(h.cards.length!==2||h.cards[0].rank!==h.cards[1].rank)throw new Error('This hand cannot be split');if(user.balance<h.bet)throw new Error('Insufficient balance');store.adjustBalance(user,-h.bet,'BLACKJACK_SPLIT');const c=h.cards.pop();h.cards.push(g.shoe.shift());const nh={cards:[c,g.shoe.shift()],bet:h.bet,stood:false};g.hands.splice(g.activeHand+1,0,nh);}else throw new Error('Invalid action');store.saveSoon();if(g.activeHand>=g.hands.length)return blackjackSettle(user,g);return blackjackPublic(g,false,user);}
+function nextPlayable(g,from=-1){for(let i=Math.max(0,from+1);i<g.hands.length;i++){const h=g.hands[i];if(!h.stood&&cardValue(h.cards)<21)return i;}return -1;}
+function blackjackSettle(user,g){
+  dealerPlay(g);const dealerValue=cardValue(g.dealer),dealerBJ=isBlackjack(g.dealer);let payout=0;
+  for(const h of g.hands){const pv=cardValue(h.cards),natural=isBlackjack(h.cards)&&!h.fromSplit;let p=0,outcome='LOSE';
+    if(pv>21)outcome='BUSTED';
+    else if(dealerBJ){if(natural){p=h.bet;outcome='DRAW';}}
+    else if(natural){p=round2(h.bet*2.5);outcome='BLACKJACK';}
+    else if(dealerValue>21||pv>dealerValue){p=round2(h.bet*2);outcome='WIN';}
+    else if(pv===dealerValue){p=h.bet;outcome='DRAW';}
+    h.outcome=outcome;h.payout=p;h.stood=true;payout+=p;
+  }
+  if(g.insuranceTaken&&g.insuranceBet>0&&dealerBJ){g.insurancePayout=round2(g.insuranceBet*3);payout+=g.insurancePayout;}else g.insurancePayout=0;
+  const handBet=g.hands.reduce((n,h)=>n+Number(h.bet||0),0),totalBet=round2(handBet+Number(g.insuranceBet||0));
+  const totalPayout=round2(payout),mult=totalBet?totalPayout/totalBet:0;g.done=true;g.payout=totalPayout;g.activeHand=-1;
+  delete store.state.activeBlackjack[user.id];record(user,'blackjack',totalBet,totalPayout,mult,{dealer:g.dealer,hands:g.hands,insuranceBet:g.insuranceBet||0,insuranceTaken:!!g.insuranceTaken,insurancePayout:g.insurancePayout||0,proof:g.proof});store.saveSoon();return blackjackPublic(g,true,user);
+}
+function blackjackPublic(g,done=false,user=null){return {id:g.id,bet:g.originalBet,dealer:done?g.dealer:[g.dealer[0],{hidden:true}],hands:g.hands.map(h=>({...h,value:cardValue(h.cards)})),activeHand:g.activeHand,done,proof:g.proof,balance:user?.balance,insuranceBet:g.insuranceBet||0,insuranceOffered:!!g.insuranceOffered,insuranceTaken:!!g.insuranceTaken,insuranceResolved:!!g.insuranceResolved,payout:g.payout||0};}
+function blackjackStart(user,body={}){
+  if(store.state.activeBlackjack[user.id])throw new Error('Finish your current Blackjack hand first');const bet=validBet(user,body.bet);store.adjustBalance(user,-bet,'BLACKJACK_BET');
+  const rnd=fair.beginRound(user,'blackjack',400);store.saveSoon();const shoe=makeShoe(rnd.values);const g={id:store.id('bj'),originalBet:bet,shoe,dealer:[shoe.shift(),shoe.shift()],hands:[{cards:[shoe.shift(),shoe.shift()],bet,stood:false,fromSplit:false,payout:0}],activeHand:0,proof:rnd.proof,created:Date.now(),insuranceBet:0,insuranceTaken:false,insuranceResolved:false,payout:0};
+  g.insuranceOffered=g.dealer[0]?.rank==='A';store.state.activeBlackjack[user.id]=g;store.saveSoon();
+  const dealerBJ=isBlackjack(g.dealer),playerBJ=isBlackjack(g.hands[0].cards);
+  if(!g.insuranceOffered&&(dealerBJ||playerBJ))return blackjackSettle(user,g);
+  return blackjackPublic(g,false,user);
+}
+function blackjackInsurance(user,taken){
+  const g=store.state.activeBlackjack[user.id];if(!g)throw new Error('No active Blackjack hand');if(!g.insuranceOffered||g.insuranceResolved)return blackjackPublic(g,false,user);
+  g.insuranceResolved=true;g.insuranceTaken=!!taken;
+  if(g.insuranceTaken){const amount=round2(g.originalBet/2);if(user.balance<amount)throw new Error('Insufficient balance');store.adjustBalance(user,-amount,'BLACKJACK_INSURANCE');g.insuranceBet=amount;}
+  store.saveSoon();if(isBlackjack(g.dealer))return blackjackSettle(user,g);if(isBlackjack(g.hands[0].cards))return blackjackSettle(user,g);return blackjackPublic(g,false,user);
+}
+function blackjackAction(user,action,handIndex){
+  const g=store.state.activeBlackjack[user.id];if(!g)throw new Error('No active Blackjack hand');if(g.insuranceOffered&&!g.insuranceResolved){g.insuranceResolved=true;g.insuranceTaken=false;}
+  let idx=Number.isInteger(Number(handIndex))?Math.floor(Number(handIndex)):g.activeHand;if(idx<0||idx>=g.hands.length)idx=g.activeHand;let h=g.hands[idx];
+  if(!h||h.stood||cardValue(h.cards)>=21)throw new Error('This hand is not active');g.activeHand=idx;action=String(action||'').toLowerCase();
+  if(action==='hit'){h.cards.push(g.shoe.shift());if(cardValue(h.cards)>=21)h.stood=true;}
+  else if(action==='stand'){h.stood=true;}
+  else if(action==='double'){if(h.cards.length!==2)throw new Error('Double is only available on the first two cards');if(user.balance<h.bet)throw new Error('Insufficient balance');store.adjustBalance(user,-h.bet,'BLACKJACK_DOUBLE');h.bet=round2(h.bet*2);h.cards.push(g.shoe.shift());h.stood=true;}
+  else if(action==='split'){if(g.hands.length>=5)throw new Error('Maximum split reached');if(h.cards.length!==2||h.cards[0].rank!==h.cards[1].rank)throw new Error('This hand cannot be split');if(user.balance<h.bet)throw new Error('Insufficient balance');store.adjustBalance(user,-h.bet,'BLACKJACK_SPLIT');const moved=h.cards.pop(),splitAces=h.cards[0]?.rank==='A';h.fromSplit=true;h.cards.push(g.shoe.shift());const nh={cards:[moved,g.shoe.shift()],bet:h.bet,stood:false,fromSplit:true,payout:0};g.hands.splice(idx+1,0,nh);if(splitAces){h.stood=true;nh.stood=true;}}
+  else throw new Error('Invalid action');
+  const score=cardValue(h.cards);if(score>=21)h.stood=true;const next=nextPlayable(g,idx);if(next<0){const earlier=nextPlayable(g,-1);if(earlier<0)return blackjackSettle(user,g);g.activeHand=earlier;}else g.activeHand=next;store.saveSoon();return blackjackPublic(g,false,user);
+}
 
 const plinkoBase={
  low:[5.6,2.1,1.1,1,0.5,1,1.1,2.1,5.6],
@@ -197,4 +235,4 @@ function upgrader(user,body={}){
   return {id:rec.row.id,_id:rec.row.id,uuid:rec.row.uuid,target,chance,rangeStart,roll,win,payout,multiplier:round2(mult),balance:user.balance,proof:r.proof};
 }
 
-module.exports={validBet,dice,minesStart,minesReveal,minesCashout,minesPublic,towersStart,towersReveal,towersCashout,towersPublic,blackjackStart,blackjackAction,blackjackPublic,plinko,plinkoTable,findCase,openCase,createCommunityCase,editCommunityCase,upgraderItems,upgrader,round2,record};
+module.exports={validBet,dice,minesStart,minesReveal,minesCashout,minesPublic,towersStart,towersReveal,towersCashout,towersPublic,blackjackStart,blackjackAction,blackjackInsurance,blackjackPublic,plinko,plinkoTable,findCase,openCase,createCommunityCase,editCommunityCase,upgraderItems,upgrader,round2,record};

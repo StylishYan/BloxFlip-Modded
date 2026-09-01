@@ -8,7 +8,7 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo Starting BloxFlip Modded v1.0 for your local network...
+echo Starting BloxFlip MODDED v1.1 for your local network...
 echo Friends on the same Wi-Fi/LAN can use: http://YOUR_IPV4:3000
 echo Your IPv4 addresses:
 ipconfig | findstr /i "IPv4"

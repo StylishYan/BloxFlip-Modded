@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-echo Stop BloxFlip Exact V2.3 before resetting it.
+echo Stop BloxFlip MODDED v1.1 before resetting it.
 choice /M "Reset all users, balances, history, chat and created community cases"
 if errorlevel 2 exit /b 0
 where node >nul 2>nul

@@ -21,7 +21,7 @@ self.__BUILD_MANIFEST = {
     "static/chunks/4843272e9021506e.js"
   ],
   "/blackjack": [
-    "static/chunks/18807c9c7a39b8a7.js"
+    "static/chunks/8dd838e468b726c2.js"
   ],
   "/case-battles": [
     "static/chunks/9f1ef1b583815b6f.js"
