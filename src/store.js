@@ -162,10 +162,38 @@ function destroySession(token) {
   }
 }
 
+const balanceLocks = new Map();
+function cleanupBalanceLocks(userId) {
+  const now = Date.now();
+  const rows = (balanceLocks.get(userId) || []).filter(x => x.expiresAt > now && x.amount > 0);
+  if (rows.length) balanceLocks.set(userId, rows); else balanceLocks.delete(userId);
+  return rows;
+}
+function lockedBalance(user) {
+  if (!user) return 0;
+  return Math.round(cleanupBalanceLocks(user.id).reduce((sum,x)=>sum+x.amount,0)*100)/100;
+}
+function spendableBalance(user) {
+  const balance = Number(user?.balance);
+  if (!Number.isFinite(balance)) throw new Error('Invalid balance');
+  return Math.max(0, Math.round((balance - lockedBalance(user))*100)/100);
+}
+function lockBalanceCredit(user, amount, delayMs) {
+  const n = Math.round(Number(amount)*100)/100, delay = Math.max(0, Math.floor(Number(delayMs)||0));
+  if (!user || !Number.isFinite(n) || n <= 0 || delay <= 0) return;
+  const rows = cleanupBalanceLocks(user.id);
+  rows.push({ amount:n, expiresAt:Date.now()+delay });
+  balanceLocks.set(user.id, rows);
+  const t=setTimeout(()=>cleanupBalanceLocks(user.id), delay+50);
+  if (t.unref) t.unref();
+}
 function adjustBalance(user, amount, reason, meta={}) {
   const n = Math.round(Number(amount) * 100) / 100;
   if (!Number.isFinite(n)) throw new Error('Invalid amount');
-  const next = Math.round((user.balance + n) * 100) / 100;
+  const current = Number(user.balance);
+  if (!Number.isFinite(current)) throw new Error('Invalid balance');
+  if (n < 0 && -n > spendableBalance(user) + 0.000001) throw new Error('Insufficient balance');
+  const next = Math.round((current + n) * 100) / 100;
   if (next < -0.000001) throw new Error('Insufficient balance');
   user.balance = Math.max(0, next);
   const tx = { id: id('tx'), userId: user.id, amount: n, reason, meta, created: Date.now(), balanceAfter: user.balance };
@@ -250,6 +278,9 @@ module.exports = {
   userBySession,
   destroySession,
   adjustBalance,
+  spendableBalance,
+  lockedBalance,
+  lockBalanceCredit,
   recordGame,
   publicUser
 };
